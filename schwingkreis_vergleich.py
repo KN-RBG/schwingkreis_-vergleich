@@ -2,7 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from matplotlib.patches import Rectangle, Circle, FancyArrowPatch
+from matplotlib.patches import Circle, Ellipse, FancyArrowPatch
+from matplotlib.lines import Line2D
 from matplotlib.widgets import Button, Slider
 
 # The models are scaled to the same angular frequency.
@@ -35,7 +36,6 @@ class Comparison:
         self.setup_circuit()
         self.setup_energy()
         self.setup_spring()
-        self.status = self.fig.text(.5, .215, "", ha="center", fontsize=10)
         play_ax = self.fig.add_axes([.09, .09, .13, .055])
         self.btn = Button(play_ax, "Pause")
         self.btn.on_clicked(self.toggle)
@@ -99,7 +99,20 @@ class Comparison:
         a.set_xticklabels(["0", "T/4", "T/2", "3T/4", "T",
                            "5T/4", "3T/2", "7T/4", "2T"])
         a.grid(alpha=.2)
-        a.legend(fontsize=9, loc="upper right")
+        # Mechanical and electrical energy pairs follow identical curves.
+        legend_handles = [
+            Line2D([0], [0], color=BLUE, lw=2,
+                   label=r"$E_{el}$ (Kondensator)"),
+            Line2D([0], [0], color=BLUE, lw=2, ls="--",
+                   label=r"$E_{Spann}$ (Federn)"),
+            Line2D([0], [0], color=RED, lw=2,
+                   label=r"$E_{mag}$ (Spule)"),
+            Line2D([0], [0], color=RED, lw=2, ls="--",
+                   label=r"$E_{kin}$ (Masse)"),
+            Line2D([0], [0], color=GREEN, lw=1, ls="--",
+                   label=r"$E_{ges}$"),
+        ]
+        a.legend(handles=legend_handles, fontsize=9, loc="upper right")
 
     def setup_spring(self):
         a = self.ax_r
@@ -137,14 +150,28 @@ class Comparison:
                                       mutation_scale=9, lw=1.3)
                 self.ax_l.add_patch(arr)
                 self.cap_field_arrows.append(arr)
-        n_b = round(5 * abs(current))
-        if n_b:
-            for y in np.linspace(-.9, .9, n_b):
-                start, end = ((6.55, y), (7.45, y)) if current > 0 else ((7.45, y), (6.55, y))
-                arr = FancyArrowPatch(start, end, arrowstyle="->", color=RED,
-                                      mutation_scale=9, lw=1.3)
-                self.ax_l.add_patch(arr)
-                self.coil_field_arrows.append(arr)
+        # Curved, closed magnetic field lines surrounding the coil.
+        # Their number represents field strength; arrows indicate direction.
+        n_b = round(4 * abs(current))
+        for i in range(n_b):
+            width = 1.4 + .37 * i
+            height = 2.85 + .31 * i
+            curve = Ellipse((7, 0), width, height, fill=False,
+                            edgecolor=RED, lw=1.35, alpha=.85, zorder=1)
+            self.ax_l.add_patch(curve)
+            self.coil_field_arrows.append(curve)
+            # Tangential arrow at the top of each ellipse.
+            theta = np.pi / 2
+            delta = .14 * (1 if current > 0 else -1)
+            start = (7 + width/2 * np.cos(theta - delta),
+                     height/2 * np.sin(theta - delta))
+            end = (7 + width/2 * np.cos(theta + delta),
+                   height/2 * np.sin(theta + delta))
+            arrow = FancyArrowPatch(start, end, arrowstyle="-|>",
+                                     color=RED, lw=1.35, mutation_scale=10,
+                                     zorder=3)
+            self.ax_l.add_patch(arrow)
+            self.coil_field_arrows.append(arrow)
 
     def toggle(self, event):
         self.playing = not self.playing
@@ -197,10 +224,6 @@ class Comparison:
         self.velocity.set_position((x, 1))
         self.position.xy = (x, -1.1)
         self.position.set_position((5, -1.1))
-        self.status.set_text(
-            f"Phase: {np.degrees(p):.0f} Grad     "
-            f"Elektrische Energie: {100*q*q:.0f} %     "
-            f"Magnetische Energie: {100*current*current:.0f} %")
         if abs(self.time_slider.val-p) > .002:
             self.dragging = True
             self.time_slider.set_val(p)
