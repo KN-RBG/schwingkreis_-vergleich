@@ -80,33 +80,33 @@ class Comparison:
         a = self.ax_e
         t = np.linspace(0, 2 * PERIOD, 500)
         a.plot(t, np.cos(OMEGA * t) ** 2, color=BLUE, lw=2,
-               label=r"$E_{el}/E_{ges}$")
+               label=r"$E_{\mathrm{el}}/E_{\mathrm{ges}}$")
         a.plot(t, np.sin(OMEGA * t) ** 2, color=RED, lw=2,
-               label=r"$E_{mag}/E_{ges}$")
-        a.axhline(1, color=GREEN, lw=1, ls="--", label=r"$E_{ges}$")
+               label=r"$E_{\mathrm{mag}}/E_{\mathrm{ges}}$")
+        a.axhline(1, color=GREEN, lw=1, ls="--", label=r"$E_{\mathrm{ges}}$")
         self.cursor = a.axvline(0, color="black", lw=1.5)
         self.el_point, = a.plot([0], [1], "o", color=BLUE)
         self.mag_point, = a.plot([0], [0], "o", color=RED)
         a.set(xlim=(0, 2 * PERIOD), ylim=(-.07, 1.12),
-              xlabel="Zeit / eine Schwingungsdauer T = 8 s",
+              xlabel=r"Zeit / Schwingungsdauer $T = 8\,\mathrm{s}$",
               ylabel="Relative Energie")
         a.set_xticks([0, PERIOD/4, PERIOD/2, 3*PERIOD/4, PERIOD,
                       5*PERIOD/4, 3*PERIOD/2, 7*PERIOD/4, 2*PERIOD])
-        a.set_xticklabels(["0", "T/4", "T/2", "3T/4", "T",
-                           "5T/4", "3T/2", "7T/4", "2T"])
+        a.set_xticklabels(["0", r"$T/4$", r"$T/2$", r"$3T/4$", r"$T$",
+                           r"$5T/4$", r"$3T/2$", r"$7T/4$", r"$2T$"])
         a.grid(alpha=.2)
         # Mechanical and electrical energy pairs follow identical curves.
         legend_handles = [
             Line2D([0], [0], color=BLUE, lw=2,
-                   label=r"$E_{el}$ (Kondensator)"),
+                   label=r"$E_{\mathrm{el}}$ (Kondensator)"),
             Line2D([0], [0], color=BLUE, lw=2, ls="--",
-                   label=r"$E_{Spann}$ (Federn)"),
+                   label=r"$E_{\mathrm{Spann}}$ (Federn)"),
             Line2D([0], [0], color=RED, lw=2,
-                   label=r"$E_{mag}$ (Spule)"),
+                   label=r"$E_{\mathrm{mag}}$ (Spule)"),
             Line2D([0], [0], color=RED, lw=2, ls="--",
-                   label=r"$E_{kin}$ (Masse)"),
+                   label=r"$E_{\mathrm{kin}}$ (Masse)"),
             Line2D([0], [0], color=GREEN, lw=1, ls="--",
-                   label=r"$E_{ges}$"),
+                   label=r"$E_{\mathrm{ges}}$"),
         ]
         a.legend(handles=legend_handles, fontsize=9, loc="upper right")
 
@@ -194,8 +194,8 @@ class Comparison:
         current = np.sin(p)  # Current magnitude, with reference direction chosen.
         self.plus.set_text("+" if q >= 0 else "-")
         self.minus.set_text("-" if q >= 0 else "+")
-        self.charge_text.set_text(f"q/qmax = {q:+.2f}")
-        self.current_text.set_text(f"I/Imax = {current:+.2f}")
+        self.charge_text.set_text(rf"$q/q_{{\mathrm{{max}}}} = {q:+.2f}$")
+        self.current_text.set_text(rf"$I/I_{{\mathrm{{max}}}} = {current:+.2f}$")
         self.draw_fields(q, current)
         if self.arrow is not None:
             # A removed artist must not be removed again on the next frame.
@@ -215,7 +215,7 @@ class Comparison:
         self.left_spring.set_data(*self.spring_shape(.8, x-.42))
         self.right_spring.set_data(*self.spring_shape(x+.42, 9.2))
         self.mass.center = (x, 0)
-        self.spring_text.set_text(f"s/A = {q:+.2f}     v/vmax = {-current:+.2f}")
+        self.spring_text.set_text(rf"$s/A = {q:+.2f} \qquad v/v_{{\mathrm{{max}}}} = {-current:+.2f}$")
         self.velocity.xy = (x - 1.5*current, 1)
         self.velocity.set_position((x, 1))
         self.position.xy = (x, -1.1)
