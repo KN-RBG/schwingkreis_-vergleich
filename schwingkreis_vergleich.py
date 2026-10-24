@@ -57,14 +57,10 @@ class Comparison:
     def setup_circuit(self):
         a = self.ax_l
         # Wires and capacitor (upper and lower nodes, no wire across gap).
-        a.plot([1, 3], [2, 2], color="black", lw=2)
         a.plot([3, 3], [2, .45], color="black", lw=2)
         a.plot([2.4, 3.6], [.45, .45], color="black", lw=3)
         a.plot([2.4, 3.6], [-.45, -.45], color="black", lw=3)
         a.plot([3, 3], [-.45, -2], color="black", lw=2)
-        a.plot([1, 3], [-2, -2], color="black", lw=2)
-        a.plot([1, 1], [-2, 2], color="black", lw=2)
-        a.plot([1, 6.3], [2, 2], color="black", lw=2, alpha=0)  # layout anchor
         a.plot([3, 7], [2, 2], color="black", lw=2)
         a.plot([3, 7], [-2, -2], color="black", lw=2)
         a.plot([7, 7], [2, 1.25], color="black", lw=2)
@@ -74,8 +70,8 @@ class Comparison:
                color="black", lw=2)
         self.plus = a.text(3.9, .75, "+", color=BLUE, fontsize=22, fontweight="bold")
         self.minus = a.text(3.9, -.95, "-", color=BLUE, fontsize=22, fontweight="bold")
-        self.charge_text = a.text(3, -3.0, "", ha="center", color=BLUE, fontsize=11)
-        self.current_text = a.text(7, -3.0, "", ha="center", color=RED, fontsize=11)
+        self.charge_text = a.text(0.8, -3.0, "", ha="left", color=BLUE, fontsize=9)
+        self.current_text = a.text(9.2, -3.5, "", ha="right", color=RED, fontsize=9)
         self.cap_field_arrows = []
         self.coil_field_arrows = []
         self.arrow = None
@@ -198,8 +194,8 @@ class Comparison:
         current = np.sin(p)  # Current magnitude, with reference direction chosen.
         self.plus.set_text("+" if q >= 0 else "-")
         self.minus.set_text("-" if q >= 0 else "+")
-        self.charge_text.set_text(f"Ladung q/qmax = {q:+.2f}")
-        self.current_text.set_text(f"Strom I/Imax = {current:+.2f}")
+        self.charge_text.set_text(f"q/qmax = {q:+.2f}")
+        self.current_text.set_text(f"I/Imax = {current:+.2f}")
         self.draw_fields(q, current)
         if self.arrow is not None:
             # A removed artist must not be removed again on the next frame.
