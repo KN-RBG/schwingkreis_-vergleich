@@ -18,10 +18,10 @@ class Comparison:
         self.playing = True
         self.speed = 1.0
         self.dragging = False
-        self.fig = plt.figure(figsize=(13.5, 7.5))
+        self.fig = plt.figure(figsize=(15, 8.2))
         self.fig.suptitle("Elektrischer Schwingkreis und Federschwinger", fontsize=16)
-        gs = self.fig.add_gridspec(1, 3, left=.045, right=.98, top=.86,
-                                   bottom=.25, width_ratios=[1.15, 1.6, 1.3], wspace=.26)
+        gs = self.fig.add_gridspec(1, 3, left=.045, right=.98, top=.87,
+                                   bottom=.28, width_ratios=[1.15, 1.6, 1.3], wspace=.3)
         self.ax_l = self.fig.add_subplot(gs[0, 0])
         self.ax_e = self.fig.add_subplot(gs[0, 1])
         self.ax_r = self.fig.add_subplot(gs[0, 2])
@@ -31,11 +31,11 @@ class Comparison:
             ax.set_aspect("equal")
             ax.axis("off")
         self.ax_l.set_title("LC-Schwingkreis")
-        self.ax_r.set_title("Federpendel")
+        self.ax_r.set_title("Horizontaler Federschwinger")
         self.setup_circuit()
         self.setup_energy()
         self.setup_spring()
-        self.status = self.fig.text(.5, .20, "", ha="center", fontsize=11)
+        self.status = self.fig.text(.5, .215, "", ha="center", fontsize=10)
         play_ax = self.fig.add_axes([.09, .09, .13, .055])
         self.btn = Button(play_ax, "Pause")
         self.btn.on_clicked(self.toggle)
@@ -76,7 +76,8 @@ class Comparison:
         self.minus = a.text(3.9, -.95, "-", color=BLUE, fontsize=22, fontweight="bold")
         self.charge_text = a.text(3, -3.0, "", ha="center", color=BLUE, fontsize=11)
         self.current_text = a.text(7, -3.0, "", ha="center", color=RED, fontsize=11)
-        self.flux = a.text(8, 0, "", ha="center", color=RED, fontsize=10)
+        self.cap_field_arrows = []
+        self.coil_field_arrows = []
         self.arrow = None
 
     def setup_energy(self):
@@ -102,19 +103,48 @@ class Comparison:
 
     def setup_spring(self):
         a = self.ax_r
-        a.plot([.7, .7], [-1, 1], color="black", lw=5)
-        for y in np.linspace(-1, 1, 10):
-            a.plot([.5, .7], [y-.2, y], color="gray", lw=1)
-        a.axvline(6, color="gray", ls="--", lw=1)
-        a.text(6, -2.3, "Gleichgewicht", ha="center", fontsize=9)
-        self.spring_line, = a.plot([], [], color="black", lw=2)
-        self.mass = Circle((8, 0), .45, color="#333333", zorder=4)
+        for wall in (.8, 9.2):
+            a.plot([wall, wall], [-1, 1], color="black", lw=4)
+        a.axvline(5, color="gray", ls="--", lw=1)
+        a.text(5, -2.35, "Gleichgewichtslage", ha="center", fontsize=9)
+        self.left_spring, = a.plot([], [], color="black", lw=2)
+        self.right_spring, = a.plot([], [], color="black", lw=2)
+        self.mass = Circle((7, 0), .42, color="#333333", zorder=4)
         a.add_patch(self.mass)
-        self.spring_text = a.text(5, 2.3, "", ha="center", fontsize=11)
-        self.velocity = a.annotate("", xy=(8, 1), xytext=(8, 1),
+        self.spring_text = a.text(5, 2.3, "", ha="center", fontsize=10)
+        self.velocity = a.annotate("", xy=(7, 1), xytext=(7, 1),
                                    arrowprops=dict(arrowstyle="->", color=RED, lw=2))
-        self.position = a.annotate("", xy=(6, -1), xytext=(6, -1),
+        self.position = a.annotate("", xy=(5, -1.1), xytext=(5, -1.1),
                                    arrowprops=dict(arrowstyle="->", color=BLUE, lw=2))
+
+    @staticmethod
+    def spring_shape(start, end):
+        xs = np.linspace(start, end, 180)
+        ys = .3 * np.sin(np.linspace(0, 16*np.pi, len(xs)))
+        ys[0] = ys[-1] = 0
+        return xs, ys
+
+    def draw_fields(self, charge, current):
+        for arrow in self.cap_field_arrows + self.coil_field_arrows:
+            arrow.remove()
+        self.cap_field_arrows.clear()
+        self.coil_field_arrows.clear()
+        n_e = round(6 * abs(charge))
+        if n_e:
+            for x in np.linspace(2.55, 3.45, n_e):
+                start, end = ((x, .32), (x, -.32)) if charge > 0 else ((x, -.32), (x, .32))
+                arr = FancyArrowPatch(start, end, arrowstyle="->", color=BLUE,
+                                      mutation_scale=9, lw=1.3)
+                self.ax_l.add_patch(arr)
+                self.cap_field_arrows.append(arr)
+        n_b = round(5 * abs(current))
+        if n_b:
+            for y in np.linspace(-.9, .9, n_b):
+                start, end = ((6.55, y), (7.45, y)) if current > 0 else ((7.45, y), (6.55, y))
+                arr = FancyArrowPatch(start, end, arrowstyle="->", color=RED,
+                                      mutation_scale=9, lw=1.3)
+                self.ax_l.add_patch(arr)
+                self.coil_field_arrows.append(arr)
 
     def toggle(self, event):
         self.playing = not self.playing
@@ -143,7 +173,7 @@ class Comparison:
         self.minus.set_text("-" if q >= 0 else "+")
         self.charge_text.set_text(f"Ladung q/qmax = {q:+.2f}")
         self.current_text.set_text(f"Strom I/Imax = {current:+.2f}")
-        self.flux.set_text("B-Feld: " + ("stark" if abs(current) > .65 else "schwach"))
+        self.draw_fields(q, current)
         if self.arrow is not None:
             self.arrow.remove()
         if abs(current) > .05:
@@ -155,18 +185,15 @@ class Comparison:
         self.cursor.set_xdata([time, time])
         self.el_point.set_data([time], [q*q])
         self.mag_point.set_data([time], [current*current])
-        x = 6 + 2 * q
-        xs = np.linspace(.7, x-.45, 180)
-        ys = .4 * np.sin(np.linspace(0, 16*np.pi, len(xs)))
-        ys[0], ys[-1] = 0, 0
-        self.spring_line.set_data(xs, ys)
+        x = 5 + 2 * q
+        self.left_spring.set_data(*self.spring_shape(.8, x-.42))
+        self.right_spring.set_data(*self.spring_shape(x+.42, 9.2))
         self.mass.center = (x, 0)
         self.spring_text.set_text(f"s/A = {q:+.2f}     v/vmax = {-current:+.2f}")
-        v = -current
-        self.velocity.xy = (x + 1.5*v, 1)
+        self.velocity.xy = (x - 1.5*current, 1)
         self.velocity.set_position((x, 1))
         self.position.xy = (x, -1.1)
-        self.position.set_position((6, -1.1))
+        self.position.set_position((5, -1.1))
         self.status.set_text(
             f"Phase: {np.degrees(p):.0f} Grad     "
             f"Elektrische Energie: {100*q*q:.0f} %     "
