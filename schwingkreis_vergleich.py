@@ -175,7 +175,10 @@ class Comparison:
         self.current_text.set_text(f"Strom I/Imax = {current:+.2f}")
         self.draw_fields(q, current)
         if self.arrow is not None:
-            self.arrow.remove()
+            # A removed artist must not be removed again on the next frame.
+            if self.arrow.axes is not None:
+                self.arrow.remove()
+            self.arrow = None
         if abs(current) > .05:
             sign = 1 if current > 0 else -1
             self.arrow = FancyArrowPatch((5, 2.7), (5 + sign*1.2, 2.7),
